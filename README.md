@@ -1,99 +1,98 @@
-# LUIT Academy — Serverless AI Document Processor
+# LUIT Academy Monday Challenge
+## Serverless AI Document Processor — Lambda + S3 + Bedrock + Terraform
 
-> **Monday Challenge Starter Kit**
-> Deploy a serverless AI pipeline on AWS using Lambda + S3 + Amazon Bedrock + Terraform.
+> **This is starter code.** It is intentionally incomplete. Your job is to finish it.
 
 ---
 
-## What This Builds
+## What You're Building
+
+An event-driven AWS pipeline that:
+1. Watches an S3 bucket for new documents
+2. Triggers a Lambda function automatically on upload
+3. Sends the document text to Amazon Bedrock (Claude) for AI summarization
+4. Stores the AI-generated summary in a second S3 bucket
+
+---
+
+## Architecture
 
 ```
-[You upload a .txt or .pdf]
-        ↓
-   [S3 Input Bucket]  ──triggers──>  [AWS Lambda (Python)]
-                                             ↓
-                                  [Amazon Bedrock - Claude]
-                                             ↓
-                              [S3 Output Bucket → AI Summary]
+[Input S3 Bucket] ──(event trigger)──> [Lambda Function] ──> [Amazon Bedrock]
+                                                |
+                                                v
+                                       [Output S3 Bucket]
 ```
 
-Everything provisioned as Infrastructure as Code with Terraform.
+---
+
+## What's Already Done For You
+
+- ✅ `provider.tf` / Terraform setup
+- ✅ Both S3 buckets (`aws_s3_bucket`)
+- ✅ Lambda function resource (`aws_lambda_function`)
+- ✅ IAM execution role + S3 read/write policies (`iam.tf`)
+- ✅ CloudWatch log group
+- ✅ Lambda handler code (`lambda/handler.py`) — calls Bedrock and writes the summary
 
 ---
 
-## Prerequisites
+## What YOU Need to Complete
 
-- AWS Account with Bedrock model access enabled
-- Terraform >= 1.5.0
-- AWS CLI configured (aws configure)
+### Step 1 — Fill in your variable values (`variables.tf`)
+
+Open `variables.tf` and uncomment + set your own values for:
+
+| Variable | What to set |
+|---|---|
+| `input_bucket_name` | A globally unique S3 bucket name (e.g. `yourname-luit-input-2026`) |
+| `output_bucket_name` | A globally unique S3 bucket name (e.g. `yourname-luit-output-2026`) |
+| `lambda_function_name` | A unique Lambda function name in your account |
 
 ---
 
-## Deploy in 5 Steps
+### Step 2 — Wire up the S3 → Lambda trigger (`main.tf`)
+
+The pipeline won't fire until you add two resources at the bottom of `main.tf`:
+
+**Resource 1:** Give S3 permission to invoke your Lambda
+
+```hcl
+resource "aws_lambda_permission" "allow_s3" {
+  # Fill this in — hints are in main.tf
+}
+```
+
+**Resource 2:** Tell the input bucket to trigger Lambda on object creation
+
+```hcl
+resource "aws_s3_bucket_notification" "trigger" {
+  # Fill this in — hints are in main.tf
+}
+```
+
+---
+
+## Deploy
 
 ```bash
-# 1. Clone the repo
-git clone https://github.com/LevelUpInTech/luit-serverless-ai-doc-processor.git
-cd luit-serverless-ai-doc-processor
-
-# 2. Initialize Terraform
 terraform init
-
-# 3. Review what will be created
 terraform plan
-
-# 4. Deploy
 terraform apply
-
-# 5. Upload a test document
-aws s3 cp test.txt s3://luit-ai-doc-input-dev/
 ```
 
 ---
 
-## Customizing Bucket Names
+## Test It
 
-Bucket names must be globally unique. Update variables.tf or pass at apply time:
-
-```bash
-terraform apply -var="input_bucket_name=YOUR-UNIQUE-INPUT-NAME" -var="output_bucket_name=YOUR-UNIQUE-OUTPUT-NAME"
-```
-
----
-
-## Verify It Worked
-
-```bash
-# Check CloudWatch logs (screenshot these for your proof!)
-aws logs tail /aws/lambda/luit-doc-processor --follow
-
-# Read your AI summary from the output bucket
-aws s3 cp s3://luit-ai-doc-output-dev/summaries/test_summary.txt -
-```
+1. Upload any `.txt` or `.pdf` file to your input bucket
+2. Check CloudWatch Logs — you should see a successful Lambda invocation
+3. Open your output bucket — find the AI-generated summary file
 
 ---
 
 ## Post Your Proof
 
-1. Screenshot your CloudWatch logs showing a successful invocation
-2. Drop it in the LUIT Academy community: https://skool.com/luit-academy
+Drop a screenshot of your CloudWatch logs showing a successful invocation in the LUIT Academy Skool community comments.
 
----
-
-## Clean Up
-
-```bash
-terraform destroy
-```
-
----
-
-## Resources
-
-- LUIT Academy Classroom: https://skool.com/luit-academy
-- Amazon Bedrock Docs: https://docs.aws.amazon.com/bedrock/
-- Terraform AWS Provider: https://registry.terraform.io/providers/hashicorp/aws/latest
-
----
-
-*Built for the LUIT Academy community. Let's get it. 💪*
+**First 3 members to post proof get a shoutout on Friday's Wins Wall.**
